@@ -97,7 +97,11 @@ def playToWin(x, emptySlots):
 
     return 0
 
-
+#=========================================
+# Bot definitely wins
+#=========================================
+def botWins(x,emptySlots):
+    return isNextMoveWin(x,emptySlots,"O")
 #=========================================
 # print the table on the screen
 #=========================================
@@ -174,13 +178,21 @@ def botPlay(tmp):
             printTable(x)
             return x
 
-#-------------2nd Move-----------------------
+#-------------Subsequent Moves-----------------
+        
     else:
         playPos = isNextMoveWin(x, emptySlots)
         rand = choice(emptySlots)
         ptw = playToWin(x, emptySlots)
+        decider = botWins(x,emptySlots)
 
-        if playPos:
+        if decider:
+            x = play(x, decider, "O")
+            Ohistory.append(decider)
+            emptySlots.remove(decider)
+            printTable(x)
+            return x
+        elif playPos:
             x = play(x, playPos, "O")
             Ohistory.append(playPos)
             emptySlots.remove(playPos)
@@ -220,29 +232,57 @@ Xhistory = []
 Ohistory = []
 emptySlots = [1,2,3,4,5,6,7,8,9]
 
+consent = True
+cnst = ''
 
 printTable(x)
 
 print("\nYou play 'X'")
 
-while not (win(x) or count == 4):
-    tmp = int(input("Enter position of 'X' to play :  "))
+while consent:
+    while not (win(x) or count == 4):
+        tmp = int(input("\nEnter position of 'X' to play :  "))
+        
+        if tmp in emptySlots:
+            x = play(x, tmp)
+            Xhistory.append(tmp)
+            emptySlots.remove(tmp)
 
-    x = play(x, tmp)
-    Xhistory.append(tmp)
-    emptySlots.remove(tmp)
+            x = botPlay(tmp)
+            count += 1
+        else:
+            print("Illegal move! Try again.\n")
+   
+    if win(x):
+        print("Bot wins! please play optimally!\n")
+    else:
+        print("Game Draw!")
+        x = play(x,emptySlots[0])
 
-    x = botPlay(tmp)
-    count += 1
+    print("Final Board position:\n\n")
+    printTable(x)
 
-if len(emptySlots) == 1:
-    x = play(x,emptySlots[0])
-    
-if win(x):
-    print("Bot wins! please play optimally!\n")
-else:
-    print("Game Draw!")
+    print("\n\n========================================================")
+    cnst = input("\nPlay another game? (y/n) :  ")
 
-print("Final Board position:\n\n")
-printTable(x)
+    if cnst == 'y' or  cnst == 'Y':
+        (a,b,c,d,e,f,g,h,i) = (1,2,3,4,5,6,7,8,9)
+        x = (a,b,c,d,e,f,g,h,i)
+
+        count = 0
+
+        Xhistory = []
+        Ohistory = []
+        emptySlots = [1,2,3,4,5,6,7,8,9]
+
+        consent = True
+        cnst = ''
+
+        printTable(x)
+
+    elif cnst == 'n' or cnst == 'N':
+        consent = False
+
+    else:
+        print("Invalid input. Closing game...\n\n")
 
