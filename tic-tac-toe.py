@@ -1,5 +1,5 @@
 #=========================================
-#               TIC-TAC-TOE
+#               TIC-TAC-TOE				
 #=========================================
 
 from random import choice
@@ -20,31 +20,82 @@ def win(x):
         return True
     elif x[2] == x[5] == x[8]:
         return True
-    elif x[1] == x[5] == x[8]:
+    elif x[0] == x[4] == x[8]:
         return True
-    elif x[3] == x[5] == x[7]:
+    elif x[2] == x[4] == x[6]:
         return True
     return False
 
 #=========================================
 #check if next move can be win for "X"
 #=========================================
-def isNextMoveWin():
-    global x
-    global emptySlots
+def isNextMoveWin(x, emptySlots, player = "X"):
 
     for e in emptySlots:
-        if win(play(x, e)):
+        if win(play(x, e, player)):
             return e                        # returns the index to play "O"
 
-        return 0                            # next move is not win
+    return 0                            # next move is not win
 
 #=========================================
-# Bot plays to win an edge
+# checks for a fatal move by bot
 #=========================================
+def twoWinPositions(x, emptyList):
+    counter = 0
+    for e in emptyList:
+        if win(play(x,e)):
+            counter += 1
+    return counter > 1
 
+def isMoveFatal(e, x):
+    global emptySlots
+    holder = emptySlots[:]
+        
+    x = play(x, e, "O")
+    y = x
+    holder.remove(e)
+    tmpHolder = holder[:]
+    flag = isNextMoveWin(y, tmpHolder, "O")
 
+    if flag:
+        y = play(y, flag)
+        tmpHolder.remove(flag)
+        if twoWinPositions(y, tmpHolder):
+            return True
+        else:
+            return False
 
+    else:
+        for t in holder:
+            y = play(y, t)
+            tmpHolder.remove(t)
+            if twoWinPositions(y, tmpHolder):
+                return True
+            y = x
+            tmpHolder = holder[:]
+
+        return False
+    
+
+#=========================================
+# Bot plays to win
+#=========================================
+def playToWin(x, emptySlots):
+    
+    y = x
+    holder = emptySlots[:]
+    flag = 0
+
+    for e in emptySlots:
+        y = play(y, e, "O")
+        holder.remove(e)
+        flag = isNextMoveWin(y, holder, "O")
+        if flag:
+            return flag
+        y = x
+        holder = emptySlots[:]
+
+    return 0
 
 
 #=========================================
@@ -73,7 +124,6 @@ def botPlay(tmp):
     global count
 
     rand = 0
-    Ohistory = []
 
 #-------------------1st Move-------------------
     if count == 0:
@@ -125,20 +175,37 @@ def botPlay(tmp):
             return x
 
 #-------------2nd Move-----------------------
-    playPos = isNextMoveWin()
+    else:
+        playPos = isNextMoveWin(x, emptySlots)
+        rand = choice(emptySlots)
+        ptw = playToWin(x, emptySlots)
 
-    if playPos:
-        x = play(x, playPos, "O")
-        Ohistory.append(playPos)
-        emptySlots.remove(playPos)
-        printTable(x)
-        return x
+        if playPos:
+            x = play(x, playPos, "O")
+            Ohistory.append(playPos)
+            emptySlots.remove(playPos)
+            printTable(x)
+            return x
 
-##    else:
-##        playtoWinEdge()
+        else:
+            if not isMoveFatal(ptw, x):
+                x = play(x, ptw, "O")
+                Ohistory.append(ptw)
+                emptySlots.remove(ptw)
+                printTable(x)
+                return x
+            
+            else:
+                while(isMoveFatal(rand,x)):
+                    rand = choice(emptySlots)
+                x = play(x, rand, "O")
+                Ohistory.append(rand)
+                emptySlots.remove(rand)
+                printTable(x)
+                return x
 
-    
-
+        
+        
 
 #========================================
 # main function
@@ -167,4 +234,15 @@ while not (win(x) or count == 4):
 
     x = botPlay(tmp)
     count += 1
-    break
+
+if len(emptySlots) == 1:
+    x = play(x,emptySlots[0])
+    
+if win(x):
+    print("Bot wins! please play optimally!\n")
+else:
+    print("Game Draw!")
+
+print("Final Board position:\n\n")
+printTable(x)
+
